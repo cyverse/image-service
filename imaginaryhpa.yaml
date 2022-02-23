@@ -1,0 +1,109 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: imaginary-service
+spec:
+  selector:
+    app: imaginary
+  ports:
+    - port: 9000
+      targetPort: 9000
+  type: LoadBalancer
+  selector:
+    app: imaginary
+
+
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imaginary
+spec:
+  selector:
+    matchLabels:
+      app: imaginary
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: imaginary
+    spec:  
+      containers:
+      - name: imaginary
+        image: h2non/imaginary:latest
+        resources:
+          requests:
+              cpu: "2100m"
+        args:
+        - -enable-url-source=true
+        - -concurrency=20
+        - -cpus
+        - "16"
+        ports:
+        - containerPort: 9000
+        # resources:
+          # limits:
+          #   cpu: "16"
+          # requests:
+          #   cpu: "16"
+
+
+        
+
+---
+ apiVersion: autoscaling/v1
+ kind: HorizontalPodAutoscaler
+ metadata:
+   name: imaginary
+ spec:
+   scaleTargetRef:
+     apiVersion: apps/v1
+     kind: Deployment
+     name: imaginary
+   minReplicas: 2
+   maxReplicas: 6
+   targetCPUUtilizationPercentage: 95
+
+---
+
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: random-name-of-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: imaginary-service
+            port:
+              number: 9000
+
+
+
+
+# ---
+# apiVersion: v1
+# kind: LimitRange
+# metadata:
+#   name: imaginary-limit
+#   labels:
+#     app: imaginary
+# spec:
+#   limits:
+#   - max:
+#       cpu: "16000m"
+#     min:
+#       cpu: "12000m"
+#     type: Container
+
+
