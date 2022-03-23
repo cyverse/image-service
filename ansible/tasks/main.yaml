@@ -1,0 +1,56 @@
+- name: SHELL; install k3s
+  shell:
+    cmd: curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --no-deploy traefik" sh
+  when: INSTALL_K3S is defined and INSTALL_K3S|bool
+
+- name: SHELL; install helm
+  shell:
+    cmd: curl https://raw.githubusercontent.com/helm/helm/HEAD/scripts/get-helm-3 | bash
+
+- name: SHELL; install ingress nginx
+  shell:
+    cmd: helm upgrade --install ingress-controller ingress-nginx --repo https://kubernetes.github.io/ingress-nginx --namespace ingress-nginx --create-namespace
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  when: INSTALL_NGINX_INGRESS is defined and INSTALL_NGINX_INGRESS|bool
+
+- name: FILE; Create the imaginary directory if it does not exist
+  file:
+    path: ~/imaginary
+    state: directory
+    mode: '0755'
+
+- name: TEMPLATE; imaginary.yaml
+  template: src=imaginary.yaml.j2 dest=~/imaginary/imaginary.yaml mode=666
+
+- name: TEMPLATE; default.vcl
+  template: src=default.vcl.j2 dest=~/imaginary/default.vcl mode=666
+
+- name: TEMPLATE; varnish.yaml
+  template: src=varnish.yaml.j2 dest=~/imaginary/varnish.yaml mode=666
+
+- name: SHELL; apply imaginary.yaml
+  shell:
+    cmd: kubectl apply -f ~/imaginary/imaginary.yaml
+  ignore_errors: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+- name: SHELL; create varnish secret
+  shell:
+    cmd: kubectl create secret generic varnish-secret --from-literal=secret=$(head -c32 /dev/urandom  | base64)
+  ignore_errors: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+- name: SHELL; create varnish configmap
+  shell:
+    cmd: kubectl create configmap varnish-vcl --from-file=imaginary/default.vcl
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+- name: SHELL; apply varnish.yaml
+  shell:
+    cmd: kubectl apply -f ~/imaginary/varnish.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml

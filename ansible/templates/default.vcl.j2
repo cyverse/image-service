@@ -1,0 +1,19 @@
+vcl 4.0;
+
+import directors;
+import std;
+
+
+backend site1 {
+        .host = "imaginary-service";
+        .port = "{{ imaginary_port }}";
+
+}
+
+
+sub vcl_recv {
+
+    set req.backend_hint = site1;
+
+
+}

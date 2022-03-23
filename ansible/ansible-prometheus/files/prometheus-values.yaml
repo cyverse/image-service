@@ -1,0 +1,17 @@
+---
+defaultRules:
+  rules:
+    ectd: false
+kubeControllerManager:
+  enabled: false
+kubeEtcd:
+  enabled: false
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelector:
+      matchLabels:
+        prometheus: devops
+commonLabels:
+  prometheus: devops
+grafana:
+  adminPassword: "prom-operator" # this is the default

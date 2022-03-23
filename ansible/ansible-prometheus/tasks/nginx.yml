@@ -1,0 +1,11 @@
+- name: SHELL; install ingress-nginx helm chart
+  shell:
+    cmd: helm upgrade --install ingress-controller ingress-nginx --repo https://kubernetes.github.io/ingress-nginx --namespace ingress-nginx --create-namespace --set controller.metrics.enabled=true --set controller.metrics.serviceMonitor.enabled=true --set controller.metrics.serviceMonitor.additionalLabels.release="{{ prometheus_release_name }}" --set-string controller.podAnnotations."prometheus\.io/scrape"="true" --set-string controller.podAnnotations."prometheus\.io/port"="10254"
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+- name: SHELL; Upgrade prometheus helm chart
+  shell:
+    cmd: helm upgrade {{ prometheus_release_name }} prometheus-community/kube-prometheus-stack --namespace {{ prometheus_release_name }} --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml

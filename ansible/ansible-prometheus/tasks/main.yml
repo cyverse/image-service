@@ -1,0 +1,30 @@
+
+- name: SHELL; install helm
+  shell:
+    cmd: curl https://raw.githubusercontent.com/helm/helm/HEAD/scripts/get-helm-3 | bash
+
+- name: SHELL; Add prometheus-community chart repo
+  shell:
+    cmd: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts ; helm repo update
+  register: add_repo
+  until: add_repo is not failed
+  retries: 5
+
+- name: Copy file with owner and permissions
+  copy:
+    src: prometheus-values.yaml
+    dest: ~/prometheus-values.yaml
+    owner: root
+    group: root
+
+# Make prometheus to {{ prometheus_release_name }} for main script
+# default usename:Password is admin:prom-operator
+- name: SHELL; Add kube-prometheus-stack chart repo
+  shell:
+    cmd: helm install {{ prometheus_release_name }} prometheus-community/kube-prometheus-stack --values prometheus-values.yaml --namespace {{ prometheus_namespace }} --create-namespace
+  ignore_errors: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+- import_tasks: nginx.yml
+  when: INSTALL_NGINX_INGRESS is defined and INSTALL_NGINX_INGRESS|bool

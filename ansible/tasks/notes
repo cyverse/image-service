@@ -1,0 +1,201 @@
+Setting up terrys imaginary
+
+Step 1: Install k3s disable traefik:
+Use cyverse k3s ansible with disable traefik option.
+Or use:
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --no-deploy traefik" sh
+
+Step1.5: make kubeconfig accessible
+either
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+or
+sudo chmod 766 /etc/rancher/k3s/k3s.yaml
+
+Step 2: install nginx
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/cloud/deploy.yaml
+
+Step 3: install imaginary files
+mkdir imaginary
+vi imaginary.yaml
+#####
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: imaginary-service
+spec:
+  selector:
+    app: imaginary
+  ports:
+    - port: 9000
+      targetPort: 9000
+  type: LoadBalancer
+  selector:
+    app: imaginary
+
+
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imaginary
+spec:
+  selector:
+    matchLabels:
+      app: imaginary
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: imaginary
+    spec:
+      containers:
+      - name: imaginary
+        image: h2non/imaginary:latest
+        resources:
+          requests:
+              cpu: "2100m"
+        args:
+        - -enable-url-source=true
+        - -concurrency=20
+        - -cpus
+        - "16"
+        ports:
+        - containerPort: 9000
+        # resources:
+          # limits:
+          #   cpu: "16"
+          # requests:
+          #   cpu: "16"
+
+
+---
+ apiVersion: autoscaling/v1
+ kind: HorizontalPodAutoscaler
+ metadata:
+   name: imaginary
+ spec:
+   scaleTargetRef:
+     apiVersion: apps/v1
+     kind: Deployment
+     name: imaginary
+   minReplicas: 2
+   maxReplicas: 6
+   targetCPUUtilizationPercentage: 95
+
+---
+
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: random-name-of-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: imaginary-service
+            port:
+              number: 9000
+#####
+
+vi varnish.yaml
+#####
+apiVersion: v1
+kind: Service
+metadata:
+  name: varnish-svc
+  namespace: default
+spec:
+  ports:
+  - name: "http"
+    port: 80
+  selector:
+    app: varnish-proxy
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: varnish-proxy
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: varnish-proxy
+  template:
+    metadata:
+      name: varnish-proxy
+      labels:
+        app: varnish-proxy
+    spec:
+      volumes:
+        - name: varnish-config
+          configMap:
+            name: varnish-vcl
+            items:
+              - key: default.vcl
+                path: default.vcl
+        - name: varnish-secret
+          secret:
+            secretName: varnish-secret
+      containers:
+      - name: varnish
+        image: dkruyt/varnish:ubuntu
+        imagePullPolicy: Always
+        env:
+        - name: CACHE_SIZE
+          value: 128m
+        - name: VCL_CONFIG
+          value: /etc/varnish/configmap/default.vcl
+        - name: SECRET_FILE
+          value: /etc/varnish/k8s-secret/secret
+        volumeMounts:
+          - name: varnish-config
+            mountPath: /etc/varnish/configmap
+          - name: varnish-secret
+            mountPath: /etc/varnish/k8s-secret
+        ports:
+        - containerPort: 80
+#####
+vi default.vcl
+#####
+vcl 4.0;
+
+import directors;
+import std;
+
+
+backend site1 {
+        .host = "imaginary-service";
+        .port = "9000";
+
+}
+
+
+sub vcl_recv {
+
+   if (req.http.host == "www.tcm.cyverse.org") {
+        set req.backend_hint = site1;
+    }
+
+}
+#####
+
+kubectl apply -f imaginary.yaml
+
+kubectl create secret generic varnish-secret --from-literal=secret=$(head -c32 /dev/urandom  | base64)
+
+kubectl create configmap varnish-vcl --from-file=default.vcl
+kubectl apply -f varnish.yaml
+curl imaginary_service_ip # for checking
+curl imaginary_ingress # for checking
+curl varnish_internal_ip  # for checking
