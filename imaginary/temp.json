@@ -1,0 +1,20 @@
+{
+  "apiVersion": "v1",
+  "kind": "Namespace",
+  "metadata": {
+    "creationTimestamp": "2022-03-08T22:56:36Z",
+    "labels": {
+      "kubernetes.io/metadata.name": "monitoring",
+      "name": "monitoring"
+    },
+    "name": "monitoring",
+    "resourceVersion": "538551",
+    "uid": "809451d0-74b9-4e32-9572-2caee80bfac3"
+  },
+  "spec": {
+    "finalizers": []
+  },
+  "status": {
+    "phase": "Active"
+  }
+}
