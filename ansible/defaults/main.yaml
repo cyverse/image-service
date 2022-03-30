@@ -4,6 +4,6 @@ min_replicas: 2
 max_replicas: 6
 cache_size: 128m
 imaginary_port: 9000
-INSTALL_K3S: false
-INSTALL_NGINX_INGRESS: false
+INSTALL_K3S: true
+INSTALL_NGINX_INGRESS: true
 server_domain_names: [img.cyverse.org]
