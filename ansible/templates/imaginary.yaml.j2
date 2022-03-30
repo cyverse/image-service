@@ -67,12 +67,19 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: random-name-of-ingress
+  name: imaginary-ingress
   annotations:
-    kubernetes.io/ingress.class: nginx
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/issuer: "letsencrypt-prod"
+
 spec:
+  tls:
+  - hosts:
+    - img.cyverse.org
+    secretName: imaginary-tls
   rules:
-  - http:
+  - host: img.cyverse.org
+    http:
       paths:
       - path: /
         pathType: Prefix
@@ -81,8 +88,3 @@ spec:
             name: varnish-svc
             port:
               number: 80
-  # This section is only required if TLS is to be enabled for the Ingress
-  tls:
-    - hosts:
-      - img.cyverse.org
-      secretName: ingress-ssl

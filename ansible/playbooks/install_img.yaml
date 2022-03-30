@@ -1,0 +1,7 @@
+---
+- name: Install img
+  gather_facts: true
+  hosts: hosts
+  roles:
+    - role: ansible-imaginary
+    - role: ansible-prometheus
