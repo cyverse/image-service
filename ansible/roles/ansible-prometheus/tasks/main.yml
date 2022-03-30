@@ -27,4 +27,4 @@
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
 - import_tasks: nginx.yml
-  when: INSTALL_NGINX_INGRESS is defined and INSTALL_NGINX_INGRESS|bool
+  when: UPGRADE_NGINX_INGRESS is defined and UPGRADE_NGINX_INGRESS|bool
