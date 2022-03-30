@@ -19,7 +19,7 @@
 
 # Make prometheus to {{ prometheus_release_name }} for main script
 # default usename:Password is admin:prom-operator
-- name: SHELL; Add kube-prometheus-stack chart repo
+- name: SHELL; install kube-prometheus-stack chart
   shell:
     cmd: helm install {{ prometheus_release_name }} prometheus-community/kube-prometheus-stack --values prometheus-values.yaml --namespace {{ prometheus_namespace }} --create-namespace
   ignore_errors: true

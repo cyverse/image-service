@@ -29,6 +29,29 @@
 - name: TEMPLATE; varnish.yaml
   template: src=varnish.yaml.j2 dest=~/imaginary/varnish.yaml mode=666
 
+- name: TEMPLATE; le-p.yaml
+  template: src=le-p.yaml.j2 dest=~/imaginary/le-p.yaml mode=666
+
+- name: SHELL; Add cert-manager repo
+  shell:
+    cmd: helm repo add jetstack https://charts.jetstack.io ; helm repo update
+  register: add_repo
+  until: add_repo is not failed
+  retries: 5
+
+- name: SHELL; Add kube-prometheus-stack chart repo
+  shell:
+    cmd: helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set installCRDs=true
+  ignore_errors: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+- name: SHELL; apply le-p.yaml
+  shell:
+    cmd: kubectl apply -f ~/imaginary/le-p.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
 - name: SHELL; apply imaginary.yaml
   shell:
     cmd: kubectl apply -f ~/imaginary/imaginary.yaml
