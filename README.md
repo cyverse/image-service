@@ -46,9 +46,9 @@ roles:
 role: ansible-imaginary
 vars:
  server_domain_names=[YOUR_SERVER_NAME]
-role: ansible-prometheus 
+role: ansible-prometheus
 ```
-### Local installation 
+### Local installation
 
 ```bash
 ansible-playbook -u root image-service/ansible/playbooks/install_img.yaml
@@ -70,12 +70,13 @@ Variable Name | Default value if not defined | Description
 INSTALL_K3S | true | installs k3s for you
 INSTALL_NGINX_INGRESS | true | installs the nginx ingress
 imaginary_cpus | 4 | number of cpus imaginary uses
-imaginary_cpu | 1600m | 
+imaginary_cpu | 1600m |
 min_replicas | 2 | minimum number of replicas imaginary creates
 max_replicas | 6 | maximum number of replicas imaginary can create
 cache_size | 128m | the varnish cache size
 imaginary_port | 9000 | The port used by imaginary internally
 server_domain_names | [img.cyverse.org] | domain name to use
+allowed_origins | None | If set limits the origins used by imaginary
 
 #### ansible-prometheus:
 
@@ -92,8 +93,7 @@ To test our local image, let's process a file. In this case, we're going to crop
 ```bash
 
  curl -O "http://localhost:8080/crop?width=500&height=400&url=https://raw.githubusercontent.com/h2non/imaginary/master/testdata/large.jpg"
- 
+
 ```
 
 This will ask Imaginary to crop, to 100x100, an image stored in the Imaginary Github repository. This should result in a file, large.jpg being written to disc which you can display using your preferred image viewer. MacOS users can simply open large.jpg at the command line.
-

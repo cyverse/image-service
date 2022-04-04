@@ -37,6 +37,12 @@ spec:
               cpu: "{{ imaginary_cpu }}"
         args:
         - -enable-url-source=true
+{% if allowed_origins is defined %}
+        - -allowed-origins
+        - "{{ allowed_origins }}"
+{% endif %}
+        - -disable-endpoints
+        - "form"
         - -concurrency=20
         - -cpus
         - "{{ imaginary_cpus }}"
