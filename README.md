@@ -40,6 +40,8 @@ You may want to edit `ansible/playbooks/install_img.yaml` to match your domain n
 
 ``` roles:
 role: ansible-imaginary
+vars:
+ server_domain_names=[www.example.com]
 role: ansible-prometheus
 To this:
 roles:
@@ -75,7 +77,7 @@ min_replicas | 2 | minimum number of replicas imaginary creates
 max_replicas | 6 | maximum number of replicas imaginary can create
 cache_size | 128m | the varnish cache size
 imaginary_port | 9000 | The port used by imaginary internally
-server_domain_names | [img.cyverse.org] | domain name to use
+server_domain_names | None | domain name to use such as [www.example.com]
 allowed_origins | None | If set limits the origins used by imaginary
 
 #### ansible-prometheus:

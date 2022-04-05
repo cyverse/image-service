@@ -6,4 +6,3 @@ cache_size: 128m
 imaginary_port: 9000
 INSTALL_K3S: true
 INSTALL_NGINX_INGRESS: true
-server_domain_names: [img.cyverse.org]

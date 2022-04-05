@@ -4,4 +4,6 @@
   hosts: hosts
   roles:
     - role: ansible-imaginary
+  vars:
+    server_domain_names: [www.example.com]
     - role: ansible-prometheus
